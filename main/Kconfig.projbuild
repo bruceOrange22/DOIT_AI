@@ -164,12 +164,27 @@ choice AUDIO_CODEC_VB6824_TYPE
         bool "PCM 16K"
     config AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS
         bool "OPUS 16K 20ms"
+    config AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS_PCM_16K
+        bool "OPUS 16K 20ms(input) + PCM 16K(output)"
 endchoice
 
-config OPUS_CODEC_DISABLE_ESP_OPUS
-    bool
-    default y
-    depends on AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS
+choice OPUS_CODEC_TYPE
+    prompt "Opus Codec Type"
+    default OPUS_CODEC_TYPE_ONLY_DECODE if AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS_PCM_16K
+    default OPUS_CODEC_TYPE_NO_CODEC if AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS
+    default OPUS_CODEC_TYPE_ESP_OPUS
+    help
+        VB6824支持的类型
+    config OPUS_CODEC_TYPE_ESP_OPUS
+        depends on !AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS && !AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS_PCM_16K
+        bool "esp-opus"
+    config OPUS_CODEC_TYPE_NO_CODEC
+        depends on AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS
+        bool "no codec"
+    config OPUS_CODEC_TYPE_ONLY_DECODE
+        depends on AUDIO_CODEC_VB6824_TYPE_OPUS_16K_20MS_PCM_16K
+        bool "only decode"
+endchoice
 
 config USE_AUDIO_PROCESSING
     bool "启用语音唤醒与音频处理"

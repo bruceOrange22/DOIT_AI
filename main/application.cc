@@ -36,8 +36,10 @@ static const char* const STATE_STRINGS[] = {
 
 Application::Application() {
     event_group_ = xEventGroupCreate();
-#ifdef CONFIG_OPUS_CODEC_DISABLE_ESP_OPUS
+#if (defined(CONFIG_OPUS_CODEC_TYPE_NO_CODEC))
     background_task_ = new BackgroundTask(2048);
+#elif (defined(CONFIG_OPUS_CODEC_TYPE_ONLY_DECODE))
+    background_task_ = new BackgroundTask(4096 * 2 + 512);
 #else
     background_task_ = new BackgroundTask(4096 * 8);
 #endif
@@ -330,7 +332,7 @@ void Application::Start() {
         Application* app = (Application*)arg;
         app->MainLoop();
         vTaskDelete(NULL);
-#ifdef CONFIG_OPUS_CODEC_DISABLE_ESP_OPUS
+#ifdef CONFIG_IDF_TARGET_ESP32C2
     }, "main_loop", 4096, this, 2, nullptr);
 #else
     }, "main_loop", 4096 * 2, this, 2, nullptr);
@@ -349,8 +351,8 @@ void Application::Start() {
         Alert("ERROR", message, "sad");
     });
     protocol_->OnIncomingAudio([this](std::vector<uint8_t>&& data) {
-        if(device_state_ == kDeviceStateSpeaking && audio_decode_queue_.size() > 10){
-#ifdef CONFIG_OPUS_CODEC_DISABLE_ESP_OPUS
+        if(device_state_ == kDeviceStateSpeaking && audio_decode_queue_.size() > 15){
+#ifdef CONGIF_OPUS_CODEC_TYPE_NO_CODEC
             vTaskDelay(20 / portTICK_PERIOD_MS);
 #else
             vTaskDelay(60 / portTICK_PERIOD_MS);
@@ -450,7 +452,11 @@ void Application::Start() {
         Application* app = (Application*)arg;
         app->CheckNewVersion();
         vTaskDelete(NULL);
+#ifdef CONFIG_IDF_TARGET_ESP32C2
+    }, "check_new_version", 4096, this, 1, nullptr);
+#else
     }, "check_new_version", 4096 * 2, this, 1, nullptr);
+#endif
 
 
 #if CONFIG_USE_AUDIO_PROCESSING

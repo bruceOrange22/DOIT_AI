@@ -6,7 +6,6 @@ set(SOURCES "audio_codecs/audio_codec.cc"
             "audio_codecs/cores3_audio_codec.cc"
             "audio_codecs/tcircles3_audio_codec.cc"
             "opus_codecs/opus_codec.cc"
-            "opus_codecs/no_opus_codec.cc"
             "led/single_led.cc"
             "led/circular_strip.cc"
             "display/display.cc"
@@ -128,7 +127,9 @@ if(CONFIG_IDF_TARGET_ESP32)
                              "audio_codecs/cores3_audio_codec.cc"
                              "audio_codecs/es8388_audio_codec.cc")
 elseif(CONFIG_BOARD_TYPE_DOIT_ESP_VB6824 OR CONFIG_BOARD_TYPE_DOIT_ESP_VB6824_LCD)
-    list(APPEND SOURCES "audio_codecs/vb6824_audio_codec.cc")
+    list(APPEND SOURCES "audio_codecs/vb6824_audio_codec.cc" 
+                        "opus_codecs/no_opus_codec.cc"
+                        "opus_codecs/only_dec_opus_code.cc")
     list(REMOVE_ITEM SOURCES "audio_codecs/box_audio_codec.cc"
                             "audio_codecs/no_audio_codec.cc"
                             "audio_codecs/box_audio_codec.cc"

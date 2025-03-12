@@ -1,7 +1,9 @@
 
 #include "wifi_board.h"
 #include "audio_codecs/vb6824_audio_codec.h"
+#include "opus_codecs/opus_codec.h"
 #include "opus_codecs/no_opus_codec.h"
+#include "opus_codecs/only_dec_opus_code.h"
 #include "display/lcd_display.h"
 #include "application.h"
 #include "button.h"
@@ -104,9 +106,13 @@ public:
         InitializeIot();
         InitializeSpi();
         InitializeLcdDisplay();
-        audio_codec.OnWakeUp([this]() {
-            if(Application::GetInstance().GetDeviceState() != kDeviceStateListening){
-                Application::GetInstance().WakeWordInvoke("你好小智");
+        audio_codec.OnWakeUp([this](const std::string& command) {
+            if (command == "你好小智"){
+                if(Application::GetInstance().GetDeviceState() != kDeviceStateListening){
+                    Application::GetInstance().WakeWordInvoke("你好小智");
+                }
+            }else if (command == "开始配网"){
+                ResetWifiConfiguration();
             }
         });
     }
@@ -115,12 +121,16 @@ public:
         return &audio_codec;
     }
 
-#ifdef CONFIG_OPUS_CODEC_DISABLE_ESP_OPUS
     virtual OpusCodec* GetOpusCodec() override {
+#if defined(CONFIG_OPUS_CODEC_TYPE_NO_CODEC)
         static NoOpusCodec opus_codec;
+#elif defined(CONFIG_OPUS_CODEC_TYPE_ONLY_DECODE)
+        static OnlyDecOpusCodec opus_codec;
+#else
+        static OpusCodec opus_codec;
+#endif
         return &opus_codec;
     }
-#endif
 
     virtual Display* GetDisplay() override {
         return display;
